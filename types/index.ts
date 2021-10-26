@@ -1,11 +1,12 @@
 export type PostType = {
-    slug: string;
-    title: string;
-    date?: string;
-    description?: string;
-    image?: string;
-}
+  slug: string;
+  title: string;
+  publishedDate: string;
+  description?: string;
+  image?: string;
+};
 
-export interface MetaProps extends Pick<PostType, 'date' | 'description' | 'image' | 'title'> {
-    type?: string;
+export interface MetaProps
+  extends Pick<PostType, "publishedDate" | "description" | "image" | "title"> {
+  type?: string;
 }

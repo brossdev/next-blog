@@ -1,70 +1,88 @@
-import ReactMarkdown from 'react-markdown'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { format, parseISO } from "date-fns";
+import fs from "fs";
+import matter from "gray-matter";
+import mdxPrism from "mdx-prism";
+import { GetStaticPaths, GetStaticProps } from "next";
+import { serialize } from "next-mdx-remote/serialize";
+import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
+import Head from "next/head";
+import Link from "next/link";
+import Image from "next/image";
+import path from "path";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeSlug from "rehype-slug";
+import Layout, { WEBSITE_HOST_URL } from "../../components/Layout";
+import { MetaProps, PostType } from "../../types";
+import { postFilePaths, POSTS_PATH } from "../../lib/post-utils";
 
-import BlogLayout from '@/layouts/BlogLayout'
-import { BlogPostProps } from 'types'
-import { getFiles, getPostBySlug } from '@/lib/utils'
-import CustomLink from '@/components/CustomLink'
-import React from 'react'
-import { Params } from 'next/dist/next-server/server/router'
+const components = {
+  Head,
+  Image,
+  Link,
+};
 
-type CodeBlockProps = {
-  language: string
-  value: React.ReactNode
-}
+type BlogPostProps = {
+  source: MDXRemoteSerializeResult;
+  frontMatter: PostType;
+};
 
-const CodeBlock = ({ language, value }: CodeBlockProps) => {
+const BlogPost = ({ source, frontMatter }: BlogPostProps) => {
+  const customMeta: MetaProps = {
+    title: frontMatter.title,
+    description: frontMatter.description,
+    image: `${WEBSITE_HOST_URL}${frontMatter.image}`,
+    publishedDate: frontMatter.publishedDate,
+    // TS this type below
+    type: "article",
+  };
   return (
-    <div className="code-block">
-      <SyntaxHighlighter language={language} style={vscDarkPlus}>
-        {value}
-      </SyntaxHighlighter>
-    </div>
-  )
-}
+    <Layout customMeta={customMeta}>
+      <article>
+        <h1 className="mb-3 text-gray-900 dark:text-white">
+          {frontMatter.title}
+        </h1>
+        <p className="mb-10 text-sm text-gray-500 dark:text-gray-400">
+          {format(parseISO(frontMatter.publishedDate), "MMMM dd, yyyy")}
+        </p>
+        <div className="prose dark:prose-dark">
+          <MDXRemote {...source} components={components} />
+        </div>
+      </article>
+    </Layout>
+  );
+};
 
-const BlogPost = ({ frontMatter, markdownBody }: BlogPostProps) => {
-  if (!frontMatter) return <></>
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const postFilePath = path.join(POSTS_PATH, `${params?.slug}.mdx`);
+  const source = fs.readFileSync(postFilePath);
 
-  return (
-    <BlogLayout frontMatter={frontMatter}>
-      <ReactMarkdown
-        allowDangerousHtml={false}
-        source={markdownBody}
-        renderers={{
-          code: CodeBlock,
-          link: (props) => <CustomLink {...props} />,
-        }}
-      />
-    </BlogLayout>
-  )
-}
+  const { content, data } = matter(source);
 
-export async function getStaticProps({ params }: Params) {
-  const { frontMatter, markdownBody } = await getPostBySlug('blog', params.slug)
+  const mdxSource = await serialize(content, {
+    mdxOptions: {
+      remarkPlugins: [require("remark-code-titles")],
+      rehypePlugins: [mdxPrism, rehypeSlug, rehypeAutolinkHeadings],
+    },
+    scope: data,
+  });
 
   return {
     props: {
-      frontMatter,
-      markdownBody,
+      source: mdxSource,
+      frontMatter: data,
     },
-  }
-}
+  };
+};
 
-export async function getStaticPaths() {
-  const posts = await getFiles('blog')
-
-  const paths = posts.map((filename: string) => ({
-    params: {
-      slug: filename.replace(/\.md/, ''),
-    },
-  }))
+export const getStaticPaths: GetStaticPaths = async () => {
+  const paths = postFilePaths
+    .map((path) => path.replace(/\.mdx?$/, ""))
+    .map((slug) => ({ params: { slug } }));
 
   return {
     paths,
     fallback: false,
-  }
-}
+  };
+};
 
-export default BlogPost
+export default BlogPost;
