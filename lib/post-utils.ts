@@ -32,7 +32,7 @@ export function getPostBySlug(slug: string, fields: string[]): PostItems {
       items[field] = content;
     }
     if (data[field]) {
-      items.field = data[field];
+      items[field] = data[field];
     }
   });
 
