@@ -1,69 +1,35 @@
-import React from "react";
-import matter from "gray-matter";
-import path from "path";
-import fs from "fs";
-//import { Post } from '../../types'
+import Layout from "../../components/Layout"
+import { getAllPosts} from "../../lib/post-utils"
+import { PostType } from '../../types'
 
-const Blog = ({ posts }) => {
-  return (
-    <div>
-      <header>Placeholder Header</header>
-      <main>
-        <div>
-          {posts.map((post) => (
-            <div key={post.title}>
-              <div>{post.title}</div>
-              <div>{post.summary}</div>
-            </div>
-          ))}
-        </div>
-      </main>
-    </div>
-  );
-};
+type BlogProps = {
+    posts: PostType[];
+}
 
-Blog.defaultProps = {
-  posts: [],
-};
 
-const root = process.cwd();
+export function Blog({ posts }: BlogProps) {
+    return (
+        <Layout>
+            <h1>Developer Blog Posts</h1>
+            <p>Developer related blog posts</p>
+            {posts.map(post=> (
+                <article key={post.slug} className="mt-12">
+                    <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
+                        {post.title}
+                    </p>
+                </article>
+            ))}
 
-//async function getFiles(dataType: string) {
-//    return fs.readdirSync(path.join(root, 'posts', dataType), 'utf-8')
-//}
-//
-//
-//async function getPostBySlug(dataType: string, slug: string) {
-//    const source = fs.readFileSync(path.join(root, 'posts', dataType, `${slug}.mdx`), 'utf-8')
-//    const { data, content } = matter(source)
-//
-//    return {
-//        frontMatter: data,
-//        markdownBody: content,
-//    }
-//}
-
-async function getAllPostsWithFrontMatter(dataType: string) {
-  const files = fs.readdirSync(path.join(root, dataType));
-
-  return files.map((postSlug) => {
-    const source = fs.readFileSync(
-      path.join(root, dataType, postSlug),
-      "utf-8"
-    );
-
-    const { data } = matter(source);
-
-    return data;
-  });
+        </Layout>
+    )
 }
 
 export async function getStaticProps() {
-  const posts = await getAllPostsWithFrontMatter("posts");
-  console.log({ posts });
-  return {
-    props: { posts },
-  };
+    const posts = await getAllPosts(['date', 'description', 'slug', 'title'])
+
+    return {
+        props: { posts },
+    }
 }
 
 export default Blog;
