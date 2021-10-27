@@ -1,5 +1,5 @@
-import { format, parseISO } from 'date-fns';
-import Link from 'next/link';
+import { format, parseISO } from "date-fns";
+import Link from "next/link";
 import Layout from "../../components/Layout";
 import { getAllPosts } from "../../lib/post-utils";
 import { PostType } from "../../types";
@@ -16,7 +16,9 @@ export function Blog({ posts }: BlogProps) {
       {posts.map((post) => (
         <article key={post.slug} className="mt-12">
           <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
-            {format(parseISO(post.publishedDate), 'MMMM dd, yyyy')}
+            {post.publishedDate
+              ? format(parseISO(post.publishedDate), "MMMM dd, yyyy")
+              : ""}
           </p>
           <h1 className="mb-2 text-xl">
             <Link as={`/blog/${post.slug}`} href={`/blog/[slug]`}>
@@ -38,12 +40,7 @@ export function Blog({ posts }: BlogProps) {
 }
 
 export async function getStaticProps() {
-  const posts = getAllPosts([
-    "publishedDate",
-    "description",
-    "slug",
-    "title",
-  ]);
+  const posts = getAllPosts(["publishedDate", "description", "slug", "title"]);
   return {
     props: { posts },
   };
