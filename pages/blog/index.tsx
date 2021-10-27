@@ -19,7 +19,7 @@ export function Blog({ posts }: BlogProps) {
             {format(parseISO(post.publishedDate), 'MMMM dd, yyyy')}
           </p>
           <h1 className="mb-2 text-xl">
-            <Link as={`/posts/${post.slug}`} href={`/posts/[slug]`}>
+            <Link as={`/blog/${post.slug}`} href={`/blog/[slug]`}>
               <a className="text-gray-900 dark:text-white dark:hover:text-blue-400">
                 {post.title}
               </a>
