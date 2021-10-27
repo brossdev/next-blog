@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns";
 import fs from "fs";
 import matter from "gray-matter";
-import mdxPrism from "mdx-prism";
+const mdxPrism = require ("mdx-prism");
 import { GetStaticPaths, GetStaticProps } from "next";
 import { serialize } from "next-mdx-remote/serialize";
 import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
